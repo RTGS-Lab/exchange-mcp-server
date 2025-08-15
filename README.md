@@ -116,73 +116,111 @@ Most APIs support:
 ## MCP Server Setup
 
 ### Prerequisites
-- Python 3.8+
-- GEMS Exchange API key
+- Python 3.10+ (installed with RTGS Lab Tools)
+- GEMS Exchange API key (obtain from https://exchange-1.gems.msi.umn.edu)
 
 ### Installation
-1. Clone this repository
-2. Create and activate a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -e .
-   ```
-4. Set up environment variables:
-   ```bash
-   export GEMS_API_KEY="your-api-key-here"
-   ```
+This server is included as a submodule in the RTGS Lab Tools package. It's automatically available after completing the main installation:
 
-### Usage with Claude Code
-1. Start the MCP server:
-   ```bash
-   python -m server
-   ```
-2. Add to your Claude Code configuration:
-   ```json
-   {
-     "mcpServers": {
-       "gems-exchange": {
-         "command": "python",
-         "args": ["-m", "server"],
-         "env": {
-           "GEMS_API_KEY": "your-api-key"
-         }
-       }
-     }
-   }
-   ```
-
-### Usage with Other AI Assistants
-
-#### Gemini CLI
 ```bash
-gemini configure mcp add gems-exchange python -m server
+# Main RTGS Lab Tools installation (if not already done)
+git clone https://github.com/RTGS-Lab/rtgs-lab-tools.git
+cd rtgs-lab-tools
+bash install.sh
+source venv/bin/activate
 ```
 
-#### ChatGPT in Browser COMING IN THE FUTURE
-Install the MCP browser extension and add:
+### Environment Setup
+Add your GEMS Exchange API key to your environment:
+```bash
+export GEMS_EXCHANGE_API_KEY="your-api-key-here"
+# Or add to your .env file in the project root
+echo 'GEMS_EXCHANGE_API_KEY="your-api-key-here"' >> .env
+```
+
+### Usage with Claude Code CLI
+
+The GEMS Exchange server is configured in the project's `.mcp.json` file and will be automatically loaded when you run Claude Code from the project directory:
+
+```bash
+cd rtgs-lab-tools
+source venv/bin/activate
+claude
+```
+
+The server configuration in `.mcp.json`:
 ```json
 {
-  "name": "gems-exchange",
-  "command": "python -m server",
-  "env": {"GEMS_API_KEY": "your-key"}
+  "mcpServers": {
+    "gems-exchange": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "-m", "rtgs_lab_tools.mcp_server.exchange-mcp-server.server"]
+    }
+  }
 }
 ```
 
-#### Claude in Browser COMING IN THE FUTURE
-Use the Claude MCP extension with the same configuration as Claude Code.
+### Usage with Claude Desktop
+
+The GEMS Exchange server can also be used with Claude Desktop. Add this configuration to your Claude Desktop config file:
+
+**Config file location**:
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%USERPROFILE%\AppData\Roaming\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+**Configuration**:
+```json
+{
+  "mcpServers": {
+    "gems-exchange": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/path/to/rtgs-lab-tools",
+        "run",
+        "-m",
+        "rtgs_lab_tools.mcp_server.exchange-mcp-server.server"
+      ]
+    }
+  }
+}
+```
+
+**Note**: The server will automatically read the GEMS_EXCHANGE_API_KEY from your `.env` file in the project root.
+
+Replace `/path/to/rtgs-lab-tools` with your actual project path.
 
 ## API Base URLs
 - **Production**: `https://exchange-1.gems.msi.umn.edu`
 - **Documentation**: `https://exchange-1.gems.msi.umn.edu/portal/home`
 
+## Testing the Server
+
+To verify the server is working correctly:
+```bash
+# From the rtgs-lab-tools directory
+source venv/bin/activate
+python -m rtgs_lab_tools.mcp_server.exchange-mcp-server.server
+```
+
+You should see the MCP server initialization messages. Press Ctrl+C to stop.
+
+## Example Queries
+
+Once configured in Claude Code or Claude Desktop, you can ask:
+- "Get the current weather for latitude 44.98, longitude -93.27"
+- "Find soil properties at coordinates 42.5, -94.2 in Iowa"
+- "What climate datasets are available for Minnesota?"
+- "Show me the crop planting calendar for corn in the Midwest"
+- "Get elevation data for a location in Minnesota"
+
 ## Support
-- **Email**: gemssupport@umn.edu
-- **Website**: https://gems.umn.edu/exchange
-- **GitHub**: https://github.com/GEMS-UMN
+- **RTGS Lab Tools**: https://github.com/RTGS-Lab/rtgs-lab-tools
+- **GEMS Exchange Support**: gemssupport@umn.edu
+- **GEMS Exchange Portal**: https://exchange-1.gems.msi.umn.edu
+- **API Documentation**: https://exchange-1.gems.msi.umn.edu/portal/home
 
 ## Data Citation
 When using GEMS Exchange data, please cite appropriately according to the dataset documentation and follow the terms of use for each API service.
